@@ -1,107 +1,58 @@
-# ATM_Bank_full-stack--> A_Python_Full stack project on ATM_BANK operations.
+# 🏦 Enterprise Bank (DKG Bank)
 
-Project Description : This is a full-stack web application for an ATM bank system developed using Django.The ATM Bank Full-Stack Application allows users to interact with an ATM-like system through a web interface. Users can verify their PIN, check their balance, make deposits and withdrawals, and change their PIN. The backend logic is handled by Django, and the frontend includes responsive design for better user experience.
+An enterprise-grade, high-performance web application designed to simulate a modern banking environment. This project demonstrates advanced backend architecture, robust security principles, API-first design, and a premium "Glassmorphism" frontend.
 
-## Features
+## 🚀 Features & Engineering Highlights
 
-- User PIN verification
-- Check available balance
-- Withdraw funds
-- Deposit funds
-- Change PIN
+### 1. Robust Concurrency & Race-Condition Prevention
+- **Database Row-Level Locking:** Uses Django's `transaction.atomic()` and `select_for_update()` to prevent race conditions during simultaneous bank withdrawals. Mathematically guarantees that account balances never drop below zero under high-concurrency load.
+- **Automated Concurrency Testing:** Includes a multi-threaded Python test suite that intentionally simulates thousands of simultaneous withdrawal requests to verify lock stability and timeout handling.
 
+### 2. API-First Architecture (Django Rest Framework)
+- Completely decoupled business logic from the frontend by implementing DRF `APIViews`.
+- JWT & Session-based authentication systems integrated.
+- Clean, structured JSON endpoints for Withdrawals, Deposits, and PIN Verification.
 
-## Usage
+### 3. Enterprise Security
+- **API Rate Limiting (Throttling):** Blocks brute-force attacks and OTP spamming by rate-limiting anonymous users to 20 requests/minute and authenticated users to 100 requests/minute.
+- **Audit Logging:** Employs Python's built-in `logging` module to silently write immutable logs of every transaction, successful login, and failed PIN attempt to a secure `bank_audit.log` file.
 
-To use the application:
+### 4. Premium Frontend Design
+- **Dark Mode Glassmorphism:** Features a sleek, modern UI utilizing raw CSS (no heavy frameworks).
+- Incorporates dynamic animated neon gradients, translucent frosted-glass cards (`backdrop-filter: blur`), and micro-animations for a highly interactive UX.
 
-- Open your web browser and navigate to http://localhost:8000/.
-- You can use the admin panel at http://localhost:8000/admin/ to manage users and data.
+## 🛠 Tech Stack
+- **Backend:** Python, Django, Django Rest Framework (DRF)
+- **Frontend:** HTML5, Vanilla CSS3 (Glassmorphism), Vanilla JavaScript
+- **Database:** SQLite (Local) / MySQL or PostgreSQL (Production)
+- **DevOps:** GitHub Actions (CI/CD), Gunicorn
 
-## Endpoints
+## ⚙️ How to Run Locally
 
-- UserInterface
-GET /: Home page
-POST /verify_pin/: Verify user PIN
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/ATM_Bank_full-stack.git
+   cd ATM_Bank_full-stack/DKG_ATM
+   ```
 
-- BankInterface
-POST /available_balance/: Check available balance
-POST /withdraw/: Withdraw funds
-POST /deposit/: Deposit funds
-POST /pin_change/: Change PIN
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Tech Stack
+3. **Run Migrations**
+   ```bash
+   python manage.py migrate
+   ```
 
-**Client:** HTML, CSS, JavaScript
+4. **Start the Server**
+   ```bash
+   python manage.py runserver
+   ```
+   *Navigate to `http://127.0.0.1:8000` to view the application.*
 
-**Server:** Django, python
-
-**Database:** MySQL(default, can be changed to PostgreSQL, SQLite etc.)
-
-**Version Control:** Git, GitHub
-
-## Installation
-
-To get a local copy of the project up and running, follow these steps:
-
-Prerequisites
-- Python 3.x (3.7 & above)
-- Django
-- Mysql (Any SQL Enivironment Based on User's Choice)
-
-After Python installation.
-- Install Django
-
+## 🧪 Running Automated Tests
+To run the test suite and verify the concurrency protections:
 ```bash
-  pip install Django
+python manage.py test BankInterface
 ```
-
-- Install Mysql-connector
-
-```bash
-  pip install mysql-connector-python
-```
-
-- Start django your first project 
-
-```bash
-  django-admin startproject projectname
-```
-- Create your first app & Run development server  
- ```bash
-  django-admin startapp appname
-  
-  #After completeion of app
-  python manage.py runserver
-```
-
-## Useage
-
-- To use the application:
-
-- Open your web browser and navigate to http://localhost:8000/.
-- You can use the admin panel at http://localhost:8000/admin/ to manage users and data.
-
-## Endpoints
-
-- UserInterface
-GET /: Home page
-POST /verify_pin/: Verify user PIN
-
-- BankInterface
-POST /available_balance/: Check available balance
-POST /withdraw/: Withdraw funds
-POST /deposit/: Deposit funds
-POST /pin_change/: Change PIN
-
-## Tech Stack
-
-**Client:** HTML, CSS, JavaScript
-
-**Server:** Django, python
-
-**Database:** SQLite (default, can be changed to PostgreSQL, MySQL, etc.)
-
-**Version Control:** Git, GitHub
-
-

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP | DKG Bank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'UserInterface/css/style.css' %}?v=3.0">
+</head>
+<body style="justify-content: center; align-items: center;">
+    <div class="auth-card" style="margin: 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <a href="/" class="logo" style="color: var(--bank-primary);">DKG BANK</a>
+            <h2 style="margin-top: 1rem;">Verify OTP</h2>
+            <p style="color: var(--text-light); font-size: 0.9rem;">Enter the 6-digit code sent to your email.</p>
+        </div>
+
+        <form id="otpForm">
+            {% csrf_token %}
+            <div id="errorMsg" class="alert alert-error" style="display: none;"></div>
+            <div class="form-group">
+                <label>Verification Code</label>
+                <input type="text" id="otp" maxlength="6" required placeholder="000000" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+            </div>
+            <button type="submit" class="btn-primary">Verify Code</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('otpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const otp = document.getElementById('otp').value;
+            fetch("{% url 'verify_otp' %}", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": "{{ csrf_token }}" },
+                body: "otp=" + encodeURIComponent(otp)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "{% url 'reset_password' %}";
+                } else {
+                    const err = document.getElementById('errorMsg');
+                    err.textContent = data.message;
+                    err.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

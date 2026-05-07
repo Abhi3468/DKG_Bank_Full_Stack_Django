@@ -17,12 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from. import views
-from .views import validate
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("validate/", validate, name="validate"),
-    path('next_page/', views.next_page, name="next_page"),  # Use a different URL for next_page
-    path("admin/", admin.site.urls, name='admin'),
+    path("register/", views.register_view, name="register"),
+    path("login/", views.login_view, name="login"),
+    path("send-login-otp/", views.send_login_otp, name="send_login_otp"),
+    path("logout/", views.logout_view, name="logout"),
+    path('next_page/', views.next_page, name="next_page"),
+    path('forgot-password/', views.forgot_password, name="forgot_password"),
+    path('verify-otp/', views.verify_otp, name="verify_otp"),
+    path('reset-password/', views.reset_password, name="reset_password"),
 ]
 

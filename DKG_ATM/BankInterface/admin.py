@@ -1,8 +1,6 @@
 from django.contrib import admin
-from .models import Account, WithdrawalHistory, DepositHistory
+from .models import Account, Transaction, Loan
 
-# Register your models here.
 admin.site.register(Account)
-admin.site.register(WithdrawalHistory)
-admin.site.register(DepositHistory)
-# Register your models here.
+admin.site.register(Transaction)
+admin.site.register(Loan)

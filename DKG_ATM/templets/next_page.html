@@ -3,55 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DKG Bank ATM</title>
+    <title>Dashboard | DKG Bank Portal</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'BankInterface/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'UserInterface/css/style.css' %}?v=5.0">
+    <!-- BankInterface CSS has been consolidated -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap');
+        /* Modals and specific inline overrides removed in favor of global glassmorphism CSS */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            padding: 2.5rem;
+            border-radius: 24px;
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+        }
+        .modal-header { margin-bottom: 1.5rem; }
+        .close-modal { position: absolute; top: 1.5rem; right: 1.5rem; cursor: pointer; font-size: 1.5rem; }
+        .modal-footer { margin-top: 2rem; display: flex; gap: 1rem; }
+        .btn-cancel { padding: 0.75rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: 600; flex: 1; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Bank ATM</h1>
-
-        <div class="user">
-        <form action="{% url 'BankInterface:verify_pin' %}" method="post" id="pinVerificationForm">
-            {% csrf_token %}
-            <label for="card_details">Re-Enter PIN:</label>
-            <input type="password" id="card_pin" name="card_pin" maxlength="4" required><br><br>
-            <button type="submit">Submit</button>
-        </form>
+    <header class="header">
+        <a href="/" class="logo">DKG BANK</a>
+        <div class="nav-links">
+            <span style="color: white; margin-right: 1rem;">Hello, {{ user.username }}</span>
+            <a href="{% url 'logout' %}" style="color: var(--bank-accent);">Logout</a>
         </div>
+    </header>
 
-        <div class="box">
-            <div class="navbar">
-                <button class="button-30" name="user_input" type="button" id="balanceBtn" value="1">Check Balance</button>
-                <button class="button-30" name="user_input" type="button" id="withdrawBtn" value="2">Withdraw</button>
-                <button class="button-30" name="user_input" type="button" id="depositBtn" value="3">Deposit</button>
-                <button class="button-30" name="user_input" type="button" id="pinChangeBtn" value="4">Change PIN</button>
+    <div class="dashboard-grid">
+        <div class="main-panel">
+            <div class="atm-card">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <i class="bi bi-cpu" style="font-size: 2rem; color: var(--bank-accent);"></i>
+                    <i class="bi bi-wifi" style="font-size: 1.5rem; transform: rotate(90deg);"></i>
+                </div>
+                <div style="margin: 2rem 0; font-family: monospace; font-size: 1.5rem; letter-spacing: 4px;">
+                    **** **** **** <span id="displayCard"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: end;">
+                    <div>
+                        <div style="font-size: 0.7rem; opacity: 0.6; text-transform: uppercase;">Card Holder</div>
+                        <div style="text-transform: uppercase;">{{ user.username }}</div>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--bank-accent);">VISA</div>
+                </div>
+            </div>
+
+            <div class="user" id="pinSection">
+                <label>Please Re-Enter PIN to access ATM services</label>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                    <input type="password" id="card_pin" maxlength="4" style="width: 150px; text-align: center; font-size: 1.5rem; border: 2px solid #e2e8f0; border-radius: 12px; padding: 0.5rem;">
+                    <button id="verifyBtn" class="btn-primary" style="width: auto; padding: 0 2rem;">Verify</button>
+                </div>
+            </div>
+
+            <div id="atmActions" style="display: none;">
+                <div class="balance-card" style="padding: 1.5rem; margin-top: 1rem;">
+                    <h3>Available Balance</h3>
+                    <div class="amount" id="balanceDisplay">$--.--</div>
+                </div>
+
+                <div class="action-grid">
+                    <div class="action-btn" id="withdrawBtn"><i class="bi bi-cash-stack"></i> Withdraw</div>
+                    <div class="action-btn" id="depositBtn"><i class="bi bi-plus-circle"></i> Deposit</div>
+                    <div class="action-btn" id="pinChangeBtn"><i class="bi bi-shield-lock"></i> Change PIN</div>
+                    <div class="action-btn" id="historyBtn"><i class="bi bi-clock-history"></i> History</div>
+                    <div class="action-btn" id="loanBtn"><i class="bi bi-bank"></i> Quick Loan</div>
+                </div>
             </div>
         </div>
 
-        <form action="#" method="post" id="transactionForm" class="hidden">
-            {% csrf_token %}
-            <div id="dynamicInputs" class="hidden">
-
+        <div class="side-panel">
+            <div class="main-panel" style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; font-family: 'Montserrat';">Spending Summary</h3>
+                <canvas id="transactionChart"></canvas>
             </div>
-        </form>
-        
-        <div id="popupModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <p id="popupMessage">
-                    
-                </p>
+            
+            <div id="loanSection" class="main-panel" style="margin-bottom: 2rem; display: none;">
+                <h3 style="margin-bottom: 1rem; font-family: 'Montserrat'; font-size: 1rem;">Loan Center</h3>
+                <div id="loanList" style="font-size: 0.85rem;">
+                    <!-- Loan status will appear here -->
+                    <p style="color: var(--text-light);">No active loans.</p>
+                </div>
+            </div>
+                <h3 style="margin-bottom: 1rem; font-family: 'Montserrat'; font-size: 1rem;">Security Tips</h3>
+                <p style="font-size: 0.8rem; color: var(--text-light);">Never share your PIN or Password with anyone. DKG Bank will never ask for your credentials via email or phone.</p>
             </div>
         </div>
-        
-        <div id="message"></div>
     </div>
-      
-    {% load static %}
-    <script src="{% static 'BankInterface/js/script.js' %}"></script>
+
+    <!-- Modals -->
+    <!-- Withdrawal Modal -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <i class="bi bi-x-lg close-modal" onclick="closeModal('withdrawModal')"></i>
+            <div class="modal-header">
+                <h2>Withdraw Cash</h2>
+                <p style="color: var(--text-light); font-size: 0.8rem;">Amount will be debited from your savings account.</p>
+            </div>
+            <div class="form-group">
+                <label>Amount (USD)</label>
+                <input type="number" id="withdrawAmount" placeholder="Enter amount" min="1">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('withdrawModal')">Cancel</button>
+                <button class="btn-primary" id="confirmWithdraw">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <i class="bi bi-x-lg close-modal" onclick="closeModal('depositModal')"></i>
+            <div class="modal-header">
+                <h2>Deposit Funds</h2>
+                <p style="color: var(--text-light); font-size: 0.8rem;">Amount will be credited to your account instantly.</p>
+            </div>
+            <div class="form-group">
+                <label>Amount (USD)</label>
+                <input type="number" id="depositAmount" placeholder="Enter amount" min="1">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('depositModal')">Cancel</button>
+                <button class="btn-primary btn-accent" id="confirmDeposit">Deposit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN Change Modal -->
+    <div id="pinModal" class="modal">
+        <div class="modal-content">
+            <i class="bi bi-x-lg close-modal" onclick="closeModal('pinModal')"></i>
+            <div class="modal-header">
+                <h2>Change ATM PIN</h2>
+                <p style="color: var(--text-light); font-size: 0.8rem;">Set a new 4-digit security PIN.</p>
+            </div>
+            <div class="form-group">
+                <label>New 4-Digit PIN</label>
+                <input type="password" id="newPinInput" maxlength="4" placeholder="••••">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('pinModal')">Cancel</button>
+                <button class="btn-primary" id="confirmPinChange">Update PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loan Modal -->
+    <div id="loanModal" class="modal">
+        <div class="modal-content">
+            <i class="bi bi-x-lg close-modal" onclick="closeModal('loanModal')"></i>
+            <div class="modal-header">
+                <h2>Quick Loan Application</h2>
+                <p style="color: var(--text-light); font-size: 0.8rem;">Request an instant credit line based on your eligibility.</p>
+            </div>
+            <div class="form-group">
+                <label>Desired Loan Amount</label>
+                <input type="number" id="loanAmountInput" placeholder="e.g. 5000">
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 1rem;">Interest rate: 5.0% APY. Subject to approval.</p>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('loanModal')">Cancel</button>
+                <button class="btn-primary" id="confirmLoan">Apply Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Result Modal -->
+    <div id="popupModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <i class="bi bi-info-circle-fill" style="font-size: 3rem; color: var(--bank-primary);"></i>
+            <p id="popupMessage" style="margin-top: 1.5rem; font-weight: 500;"></p>
+            <button class="btn-primary" style="margin-top: 1.5rem;" onclick="closeModal('popupModal')">Understood</button>
+        </div>
+    </div>
+
+    <script>
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+    </script>
+
+    <script src="{% static 'BankInterface/js/script.js' %}?v=4.0"></script>
 </body>
 </html>

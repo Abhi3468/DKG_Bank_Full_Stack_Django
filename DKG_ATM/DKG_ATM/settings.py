@@ -12,21 +12,30 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Initialize environment variables
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+# Read .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o3(5m73n58k&+rewk-s04jcu$u+3abru&xy3%*z1f8%&8ob5gw'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -41,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'UserInterface',
     'BankInterface',
-    
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -78,34 +88,10 @@ WSGI_APPLICATION = 'DKG_ATM.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASE_ROUTERS = ['DKG_ATM.routers.AppRouter']
+# DATABASE_ROUTERS = ['DKG_ATM.routers.AppRouter']
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'KRSNA',
-        'USER':'root',
-        'PASSWORD':'Abhi@6362751007',
-        'HOST':'localhost'  
-    },
-
-    'UserInterface_db': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'USER_INTERFACE',
-        'USER':'root',
-        'PASSWORD':'Abhi@6362751007',
-        'HOST':'localhost',
-        'PORT': '3306' 
-    },
-
-     'BankInterface_db': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'BANK_INTERFACE',
-        'USER':'root',
-        'PASSWORD':'Abhi@6362751007',
-        'HOST':'localhost',   
-        'PORT': '3306'
-    },
+    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
 }
 
 
@@ -144,7 +130,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 
-STATIC_ROOT = '/path/to/your/static/root'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
@@ -158,13 +144,34 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Email Configuration (SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'bank_audit.log'),
+            'formatter': 'verbose',
         },
     },
     'loggers': {
@@ -172,5 +179,27 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
+        'bank_audit': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
+}
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/min',
+        'user': '100/min'
+    }
 }

@@ -1,24 +1,9 @@
-"""
-URL configuration for DKG_ATM project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
 from django.urls import path
-from django.urls import path
-from django.urls import path
-from .views import  WithdrawalView, DepositView, PinChangeView, VerifyPinView, AvailableBalanceView
+from .views import (
+    WithdrawalView, DepositView, PinChangeView, 
+    VerifyPinView, AvailableBalanceView, TransactionHistoryView, 
+    GenerateReceiptView, AnalyticsView, LoanRequestView
+)
 
 app_name = 'BankInterface'
 
@@ -28,12 +13,8 @@ urlpatterns = [
     path('withdraw/', WithdrawalView.as_view(), name='withdraw'),
     path('deposit/', DepositView.as_view(), name='deposit'),
     path('pin_change/', PinChangeView.as_view(), name='pin_change'),
-    # path('accounts/', AccountListView.as_view(), name='account_list'),
-    # path('accounts/<str:account_number>/', AccountDetailView.as_view(), name='account_detail'),
-    path('admin/', admin.site.urls),
+    path('loan_request/', LoanRequestView.as_view(), name='loan_request'),
+    path('history/<str:card_number>/', TransactionHistoryView.as_view(), name='transaction_history'),
+    path('receipt/<int:transaction_id>/', GenerateReceiptView.as_view(), name='generate_receipt'),
+    path('analytics/<str:card_number>/', AnalyticsView.as_view(), name='analytics'),
 ]
-
-
-
-
-

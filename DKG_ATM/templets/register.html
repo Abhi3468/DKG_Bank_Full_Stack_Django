@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for an Account | DKG Bank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'UserInterface/css/style.css' %}?v=3.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body style="justify-content: center; align-items: center;">
+    <div class="auth-card" style="margin: 2rem; max-width: 500px;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <a href="/" class="logo" style="color: var(--bank-primary);">DKG BANK</a>
+            <h2 style="margin-top: 1rem;">Open Your Account</h2>
+            <p style="color: var(--text-light);">Start your financial journey with us today.</p>
+        </div>
+
+        <form id="registerForm">
+            {% csrf_token %}
+            <div id="registerError" class="alert alert-error" style="display: none;"></div>
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" name="password_confirm" required>
+            </div>
+
+            <button type="submit" class="btn-primary btn-accent">Apply Now</button>
+
+            <div class="auth-switch">
+                Already have an account? <a href="{% url 'index' %}">Sign In</a>
+            </div>
+        </form>
+
+        <!-- Success Modal -->
+        <div id="successModal"
+            style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 1rem;">
+            <div
+                style="background: white; padding: 2.5rem; border-radius: 16px; max-width: 400px; width: 100%; text-align: center;">
+                <i class="bi bi-check-circle-fill" style="font-size: 3rem; color: #10b981;"></i>
+                <h2 style="margin-top: 1rem;">Welcome to DKG Bank!</h2>
+                <p style="margin: 1rem 0; color: var(--text-light);">Your account has been created. Here are your ATM
+                    details:</p>
+                <div
+                    style="background: #f1f5f9; padding: 1rem; border-radius: 8px; font-family: monospace; text-align: left;">
+                    <p><strong>Card:</strong> <span id="resCard"></span></p>
+                    <p><strong>PIN:</strong> <span id="resPin"></span></p>
+                </div>
+                <p style="font-size: 0.8rem; color: #ef4444; margin-top: 0.5rem;">Save these details! You'll need them
+                    for ATM access.</p>
+                <button onclick="window.location.href='{% url 'index' %}'" class="btn-primary"
+                    style="margin-top: 1.5rem;">Go to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const errorDiv = document.getElementById('registerError');
+            errorDiv.style.display = 'none';
+
+            if (formData.get('password') !== formData.get('password_confirm')) {
+                errorDiv.textContent = "Passwords do not match.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            fetch("{% url 'register' %}", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('resCard').textContent = data.card_number;
+                        document.getElementById('resPin').textContent = data.pin;
+                        document.getElementById('successModal').style.display = 'flex';
+                    } else {
+                        const errors = JSON.parse(data.errors);
+                        errorDiv.innerHTML = Object.values(errors).map(err => err[0].message).join('<br>');
+                        errorDiv.style.display = 'block';
+                    }
+                });
+        });
+    </script>
+</body>
+
+</html>
