@@ -16,24 +16,27 @@ function switchLoginMode(mode) {
     const passwordInput = document.getElementById('password');
     const otpInput = document.getElementById('otp');
 
-    if (mode === 'password') {
-        passwordField.style.display = 'block';
-        otpField.style.display = 'none';
-        passwordInput.required = true;
-        otpInput.required = false;
-    } else {
-        passwordField.style.display = 'none';
-        otpField.style.display = 'block';
-        passwordInput.required = false;
-        otpInput.required = true;
+    if (passwordField && otpField) {
+        if (mode === 'password') {
+            passwordField.style.display = 'block';
+            otpField.style.display = 'none';
+            if (passwordInput) passwordInput.required = true;
+            if (otpInput) otpInput.required = false;
+        } else {
+            passwordField.style.display = 'none';
+            otpField.style.display = 'block';
+            if (passwordInput) passwordInput.required = false;
+            if (otpInput) otpInput.required = true;
+        }
     }
 }
 
-// Initialize mode
-switchLoginMode('password');
-
-// Handle "Coming Soon" navigation links
+// Handle all DOM setup when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize mode
+    switchLoginMode('password');
+
+    // Handle "Coming Soon" navigation links
     const comingSoonLinks = document.querySelectorAll('a[href="#"]');
     comingSoonLinks.forEach(link => {
         const text = link.textContent.trim().toLowerCase();
@@ -44,6 +47,123 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('comingSoonModal');
+        if (modal && e.target === modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+    });
+
+    // Send OTP button listener
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    if (sendOtpBtn) {
+        sendOtpBtn.addEventListener('click', function () {
+            const username = document.getElementById('username').value;
+            const errorDiv = document.getElementById('loginError');
+            const successDiv = document.getElementById('loginSuccess');
+
+            if (!username) {
+                errorDiv.textContent = "Please enter your username first.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = "Sending...";
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('/send_login_otp/', {
+                method: "POST",
+                credentials: 'same-origin',
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ username: username })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        successDiv.textContent = data.message;
+                        successDiv.style.display = 'block';
+                        errorDiv.style.display = 'none';
+                        setTimeout(() => { successDiv.style.display = 'none'; }, 5000);
+
+                        let count = 60;
+                        const timer = setInterval(() => {
+                            this.textContent = `Resend in ${count}s`;
+                            count--;
+                            if (count < 0) {
+                                clearInterval(timer);
+                                this.disabled = false;
+                                this.textContent = "Send OTP";
+                            }
+                        }, 1000);
+                    } else {
+                        errorDiv.textContent = data.message || "An error occurred.";
+                        errorDiv.style.display = 'block';
+                        this.disabled = false;
+                        this.textContent = "Send OTP";
+                    }
+                })
+                .catch(err => {
+                    errorDiv.textContent = "An error occurred while sending OTP.";
+                    errorDiv.style.display = 'block';
+                    this.disabled = false;
+                    this.textContent = "Send OTP";
+                    console.error(err);
+                });
+        });
+    }
+
+    // Login Form listener
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.style.display = 'none';
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const payload = {
+                username: document.getElementById('username').value,
+                method: loginMode
+            };
+
+            if (loginMode === 'password') {
+                payload.password = document.getElementById('password').value;
+            } else {
+                payload.otp = document.getElementById('otp').value;
+            }
+
+            fetch('/login/', {
+                method: "POST",
+                credentials: 'same-origin',
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/next_page/';
+                    } else {
+                        errorDiv.textContent = data.message || "Login failed.";
+                        errorDiv.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    errorDiv.textContent = "An error occurred during login.";
+                    errorDiv.style.display = 'block';
+                    console.error(err);
+                });
+        });
+    }
 });
 
 function showComingSoon(feature) {
@@ -51,121 +171,23 @@ function showComingSoon(feature) {
     const featureTitle = document.getElementById('featureTitle');
     if (modal && featureTitle) {
         featureTitle.textContent = feature + ' Banking';
+        // ensure modal is attached to document.body to avoid transform/positioning conflicts
+        if (modal.parentElement !== document.body) document.body.appendChild(modal);
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
         modal.style.display = 'flex';
+        // small timeout to trigger CSS animation class if needed
+        setTimeout(() => modal.classList.add('show'), 10);
     }
 }
 
 function closeComingSoonModal() {
     const modal = document.getElementById('comingSoonModal');
     if (modal) {
+        modal.classList.remove('show');
         modal.style.display = 'none';
     }
 }
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-    const modal = document.getElementById('comingSoonModal');
-    if (modal && e.target === modal) {
-        modal.style.display = 'none';
-    }
-});
-
-document.getElementById('sendOtpBtn').addEventListener('click', function () {
-    const username = document.getElementById('username').value;
-    const errorDiv = document.getElementById('loginError');
-    const successDiv = document.getElementById('loginSuccess');
-
-    if (!username) {
-        errorDiv.textContent = "Please enter your username first.";
-        errorDiv.style.display = 'block';
-        return;
-    }
-
-    this.disabled = true;
-    this.textContent = "Sending...";
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    fetch('/send_login_otp/', {
-        method: "POST",
-        credentials: 'same-origin',
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-        },
-        body: JSON.stringify({ username: username })
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                successDiv.textContent = data.message;
-                successDiv.style.display = 'block';
-                errorDiv.style.display = 'none';
-                setTimeout(() => { successDiv.style.display = 'none'; }, 5000);
-
-                let count = 60;
-                const timer = setInterval(() => {
-                    this.textContent = `Resend in ${count}s`;
-                    count--;
-                    if (count < 0) {
-                        clearInterval(timer);
-                        this.disabled = false;
-                        this.textContent = "Send OTP";
-                    }
-                }, 1000);
-            } else {
-                errorDiv.textContent = data.message || "An error occurred.";
-                errorDiv.style.display = 'block';
-                this.disabled = false;
-                this.textContent = "Send OTP";
-            }
-        })
-        .catch(err => {
-            errorDiv.textContent = "An error occurred while sending OTP.";
-            errorDiv.style.display = 'block';
-            this.disabled = false;
-            this.textContent = "Send OTP";
-            console.error(err);
-        });
-});
-
-document.getElementById('loginForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const errorDiv = document.getElementById('loginError');
-    errorDiv.style.display = 'none';
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    const payload = {
-        username: document.getElementById('username').value,
-        method: loginMode
-    };
-
-    if (loginMode === 'password') {
-        payload.password = document.getElementById('password').value;
-    } else {
-        payload.otp = document.getElementById('otp').value;
-    }
-
-    fetch('/login/', {
-        method: "POST",
-        credentials: 'same-origin',
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-        },
-        body: JSON.stringify(payload)
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '/next_page/';
-            } else {
-                errorDiv.textContent = data.message || "Login failed.";
-                errorDiv.style.display = 'block';
-            }
-        })
-        .catch(err => {
-            errorDiv.textContent = "An error occurred during login.";
-            errorDiv.style.display = 'block';
-            console.error(err);
-        });
-});
