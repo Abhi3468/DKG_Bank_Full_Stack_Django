@@ -17,6 +17,18 @@ class RegistrationForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     password_confirm = forms.CharField(widget=forms.PasswordInput)
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("This username is already taken.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
@@ -47,18 +59,58 @@ def register_view(request):
             # Create associated account
             card_number = generate_card_number()
             pin = generate_pin()
-            Account.objects.create(
+            account = Account.objects.create(
                 user=user,
                 card_number=card_number,
                 card_pin=pin,
                 balance=1000.00
             )
+            
+            # Fetch generated details
+            customer_name = user.username
+            customer_id = account.customer_id
+            account_number = account.account_number
+            ifsc_code = account.ifsc_code
+            
+            # Prepare email
+            subject = 'DKG Bank - Your Account Registration Details'
+            message = (
+                f"Welcome to DKG Bank, {customer_name}!\n\n"
+                f"Your account has been successfully created. Here are your account and card details:\n\n"
+                f"--------------------------------------\n"
+                f"Customer Name:  {customer_name}\n"
+                f"Customer ID:    {customer_id}\n"
+                f"Account Number: {account_number}\n"
+                f"IFSC Code:      {ifsc_code}\n\n"
+                f"ATM Card Number: {card_number}\n"
+                f"ATM PIN:        {pin}\n"
+                f"--------------------------------------\n\n"
+                f"⚠️ SECURITY ALERT:\n"
+                f"Please store these details securely. NEVER share your card details, PIN, or password with anyone, including bank employees.\n\n"
+                f"Thank you for banking with us,\n"
+                f"DKG Bank Team"
+            )
+            
+            # Send Email
+            email_sent = False
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                email_sent = True
+                print(f"\n[BANK SECURITY] Registration details sent via email to {user.email}\n", flush=True)
+            except Exception as mail_err:
+                print(f"Mail Error during registration: {mail_err}")
+            
             login(request, user)
             return JsonResponse({
                 'success': True, 
-                'message': 'Account created successfully!',
-                'card_number': card_number,
-                'pin': pin
+                'message': 'Account created successfully and details have been emailed!',
+                'email_sent': email_sent
             })
         else:
             return JsonResponse({'success': False, 'errors': form.errors.as_json()})

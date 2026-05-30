@@ -1,1 +1,6 @@
 INFO 2026-05-07 11:36:58,297 views AUDIT: Successful Withdrawal of $50 from card 1234567890123456. New Balance: $50.00
+INFO 2026-05-13 11:27:35,501 views AUDIT: Successful PIN Verification for user Abhi
+INFO 2026-05-23 14:09:41,806 views AUDIT: Successful PIN Verification for user Abhishek
+INFO 2026-05-23 20:00:36,410 views AUDIT: Successful Withdrawal of $50 from card 1234567890123456. New Balance: $50.00
+INFO 2026-05-23 14:39:57,827 views AUDIT: Successful PIN Verification for user Abhishek
+INFO 2026-05-23 16:18:26,255 views AUDIT: Successful PIN Verification for user Abhishek

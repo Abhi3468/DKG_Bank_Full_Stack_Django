@@ -4,7 +4,7 @@ from .models import Account, Transaction, Loan
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['card_number', 'account_type', 'balance', 'created_at']
+        fields = ['card_number', 'account_type', 'balance', 'account_number', 'customer_id', 'ifsc_code', 'created_at']
         read_only_fields = ['balance', 'created_at']
 
 class TransactionSerializer(serializers.ModelSerializer):

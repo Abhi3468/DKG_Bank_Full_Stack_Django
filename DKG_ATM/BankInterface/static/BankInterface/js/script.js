@@ -86,6 +86,15 @@ document.addEventListener("DOMContentLoaded", function() {
                     pinVerified = true;
                     localStorage.setItem('card_number', data.card_number);
                     document.getElementById('displayCard').textContent = "**** **** **** " + data.card_number.slice(-4);
+                    
+                    // Populate Account Details
+                    const detailAccountNumber = document.getElementById('detailAccountNumber');
+                    const detailCustomerID = document.getElementById('detailCustomerID');
+                    const detailIFSCCode = document.getElementById('detailIFSCCode');
+                    if (detailAccountNumber) detailAccountNumber.textContent = data.account_number;
+                    if (detailCustomerID) detailCustomerID.textContent = data.customer_id;
+                    if (detailIFSCCode) detailIFSCCode.textContent = data.ifsc_code;
+                    
                     if (pinSection) pinSection.style.display = 'none';
                     if (atmActions) atmActions.style.display = 'block';
                     if (loanSection) loanSection.style.display = 'block';

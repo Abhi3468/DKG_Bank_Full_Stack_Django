@@ -11,7 +11,30 @@ class Account(models.Model):
     card_number = models.CharField(max_length=16, unique=True)
     card_pin = models.CharField(max_length=4)
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    daily_limit = models.DecimalField(max_digits=12, decimal_places=2, default=1000.00)
+    is_locked = models.BooleanField(default=False)
+    failed_attempts = models.IntegerField(default=0)
+    account_number = models.CharField(max_length=12, unique=True, null=True, blank=True)
+    customer_id = models.CharField(max_length=8, unique=True, null=True, blank=True)
+    ifsc_code = models.CharField(max_length=11, default="DKGB0000001")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        import random
+        import string
+        if not self.account_number:
+            while True:
+                acc_num = ''.join(random.choices(string.digits, k=12))
+                if not Account.objects.filter(account_number=acc_num).exists():
+                    self.account_number = acc_num
+                    break
+        if not self.customer_id:
+            while True:
+                cust_id = ''.join(random.choices(string.digits, k=8))
+                if not Account.objects.filter(customer_id=cust_id).exists():
+                    self.customer_id = cust_id
+                    break
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username} - {self.card_number}"

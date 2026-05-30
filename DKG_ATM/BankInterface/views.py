@@ -25,8 +25,26 @@ class WithdrawalView(APIView):
         card_number = request.data.get('card_number')
         amount = Decimal(request.data.get('amount', 0))
         
+        from django.utils import timezone
+        
         with transaction.atomic():
             account = get_object_or_404(Account.objects.select_for_update(), card_number=card_number)
+            
+            if account.is_locked:
+                return Response({'error': 'Account is locked. Transactions are disabled.'}, status=status.HTTP_403_FORBIDDEN)
+            
+            # Calculate today's total withdrawals
+            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            todays_withdrawals = Transaction.objects.filter(
+                account=account, 
+                transaction_type='WITHDRAWAL', 
+                timestamp__gte=today_start
+            ).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
+            
+            if todays_withdrawals + amount > account.daily_limit:
+                logger.warning(f"SECURITY: Withdrawal limit exceeded attempt for card {card_number}. Amount: ${amount}, Today's Total: ${todays_withdrawals}")
+                return Response({'error': f'Daily withdrawal limit exceeded. Remaining limit: ${account.daily_limit - todays_withdrawals}'}, status=status.HTTP_400_BAD_REQUEST)
+
             if account.balance < amount:
                 return Response({'error': 'Insufficient funds'}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -52,6 +70,9 @@ class DepositView(APIView):
         
         with transaction.atomic():
             account = get_object_or_404(Account.objects.select_for_update(), card_number=card_number)
+            
+            if account.is_locked:
+                return Response({'error': 'Account is locked. Transactions are disabled.'}, status=status.HTTP_403_FORBIDDEN)
             account.balance += amount
             account.save()
             
@@ -84,13 +105,39 @@ class VerifyPinView(APIView):
             return Response({'message': 'Session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         
         card_pin = request.data.get('card_pin')
-        try:
-            account = Account.objects.get(user=request.user, card_pin=card_pin)
+        # Get the account for this user
+        account = get_object_or_404(Account, user=request.user)
+        
+        # 1. Check if account is already locked
+        if account.is_locked:
+            logger.warning(f"SECURITY: Blocked access attempt to LOCKED account for user {request.user.username}")
+            return Response({'message': 'Account is locked due to multiple failed attempts. Please contact support.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # 2. Verify PIN
+        if account.card_pin == card_pin:
+            # Success: Reset failed attempts
+            account.failed_attempts = 0
+            account.save()
             logger.info(f"AUDIT: Successful PIN Verification for user {request.user.username}")
-            return Response({'message': 'Verified', 'card_number': account.card_number})
-        except Account.DoesNotExist:
-            logger.warning(f"SECURITY: Failed PIN Verification attempt for user {request.user.username}")
-            return Response({'message': 'Invalid PIN'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message': 'Verified', 
+                'card_number': account.card_number,
+                'account_number': account.account_number,
+                'customer_id': account.customer_id,
+                'ifsc_code': account.ifsc_code
+            })
+        else:
+            # Failure: Increment failed attempts
+            account.failed_attempts += 1
+            if account.failed_attempts >= 3:
+                account.is_locked = True
+                logger.critical(f"SECURITY: Account AUTOMATICALLY LOCKED for user {request.user.username} after 3 failed attempts.")
+            account.save()
+            
+            remaining = 3 - account.failed_attempts
+            msg = f"Invalid PIN. {remaining} attempts remaining." if remaining > 0 else "Account locked."
+            logger.warning(f"SECURITY: Failed PIN attempt for user {request.user.username}. {msg}")
+            return Response({'message': msg}, status=status.HTTP_400_BAD_REQUEST)
 
 class AvailableBalanceView(APIView):
     permission_classes = [AllowAny]
@@ -98,6 +145,9 @@ class AvailableBalanceView(APIView):
     def post(self, request):
         card_number = request.data.get('card_number')
         account = get_object_or_404(Account, card_number=card_number)
+        
+        if account.is_locked:
+            return Response({'error': 'Account is locked.'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'balance': account.balance})
 
 class TransactionHistoryView(APIView):

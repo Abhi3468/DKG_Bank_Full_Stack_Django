@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+.env
+.git
+.gitignore
+.vscode
+node_modules
+staticfiles
+bank_audit.log
+Dockerfile
+docker-compose.yml
+.dockerignore

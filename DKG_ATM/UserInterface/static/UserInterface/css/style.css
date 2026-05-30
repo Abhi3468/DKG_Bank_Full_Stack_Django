@@ -346,9 +346,256 @@ body {
 }
 .btn-cancel:hover { background: rgba(255,255,255,0.1) !important; }
 
+/* ============================================
+   RESPONSIVE — Tablet (≤1024px)
+   ============================================ */
 @media (max-width: 1024px) {
+  /* Hero */
   .hero-content { grid-template-columns: 1fr; gap: 3rem; text-align: center; }
   .hero-text h1 { font-size: 3.5rem; }
   .auth-card { margin: 0 auto; }
-  .dashboard-grid { grid-template-columns: 1fr; }
+
+  /* Dashboard */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Side panel comes after main panel on tablet */
+  .side-panel { order: 2; }
+  .main-panel { order: 1; }
+}
+
+/* ============================================
+   RESPONSIVE — Mobile (≤768px)
+   ============================================ */
+@media (max-width: 768px) {
+  /* Header */
+  .header {
+    padding: 1rem 5%;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .logo { font-size: 1.4rem; }
+  .nav-links { font-size: 0.9rem; }
+  .nav-links a { margin-left: 1rem; }
+
+  /* Hero */
+  .hero { padding: 2.5rem 5%; }
+  .hero-text h1 { font-size: 2.8rem; }
+  .hero-text p { font-size: 1.1rem; }
+
+  /* Auth card */
+  .auth-card {
+    padding: 2rem 1.5rem;
+    border-radius: 18px;
+  }
+  .auth-card h2 { font-size: 1.6rem; }
+
+  /* Dashboard */
+  .dashboard-grid {
+    gap: 1.25rem;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+  }
+  .main-panel {
+    padding: 1.5rem;
+    border-radius: 18px;
+  }
+
+  /* ATM Card */
+  .atm-card {
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+  }
+  .atm-card div[style*="font-size: 1.5rem"] {
+    font-size: 1.1rem !important;
+    letter-spacing: 2px !important;
+    margin: 1.25rem 0 !important;
+  }
+
+  /* Action Grid — 2 cols on mobile */
+  .action-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+    margin-top: 1.25rem;
+  }
+  .action-btn {
+    padding: 1.1rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+  }
+  .action-btn i { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+  /* Balance + Account Details cards */
+  .balance-card, .details-card {
+    border-radius: 14px !important;
+    padding: 1.25rem !important;
+  }
+
+  /* PIN input section */
+  #pinSection input[type="password"] {
+    width: 120px !important;
+    font-size: 1.2rem !important;
+  }
+
+  /* Modals */
+  .modal { padding: 0.75rem; }
+  .modal-content {
+    padding: 1.75rem 1.25rem !important;
+    border-radius: 18px !important;
+    max-width: 100% !important;
+  }
+  .modal-header h2 { font-size: 1.4rem !important; }
+  .modal-footer {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .btn-cancel, .btn-primary {
+    width: 100% !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE — Small Mobile (≤480px)
+   ============================================ */
+@media (max-width: 480px) {
+  /* Hero */
+  .hero-text h1 { font-size: 2.2rem; }
+  .hero { padding: 2rem 4%; }
+
+  /* Auth */
+  .auth-card { padding: 1.5rem 1rem; }
+  .btn-primary { font-size: 1rem; padding: 1rem; }
+  .form-group input { padding: 0.85rem 1rem; }
+
+  /* Dashboard */
+  .dashboard-grid { padding: 0 0.75rem; margin: 1rem auto; }
+  .main-panel { padding: 1.25rem 1rem; border-radius: 14px; }
+
+  /* ATM Card number font */
+  .atm-card { padding: 1.25rem; }
+
+  /* Action Grid — 1 column on very small screens */
+  .action-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .action-btn { padding: 1rem 0.5rem; font-size: 0.82rem; }
+  .action-btn i { font-size: 1.3rem; }
+
+  /* Modals */
+  .modal-content { padding: 1.25rem 1rem !important; }
+  .modal-header h2 { font-size: 1.2rem !important; }
+}
+
+/* ============================================
+   COMING SOON MODAL
+   ============================================ */
+#comingSoonModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.95);
+  backdrop-filter: blur(15px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+#comingSoonModal.show {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.coming-soon-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.coming-soon-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(79, 172, 254, 0.2));
+  border-radius: 50%;
+  margin-left: auto;
+  margin-right: auto;
+  color: var(--bank-accent);
+  filter: drop-shadow(0 0 15px rgba(0, 242, 254, 0.4));
+}
+
+.coming-soon-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+.coming-soon-content p {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.coming-soon-btn {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  color: var(--bg-dark);
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.coming-soon-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3);
+}
+
+@media (max-width: 768px) {
+  #comingSoonModal {
+    padding: 1rem;
+  }
+  
+  .coming-soon-content {
+    padding: 2rem 1.5rem;
+  }
+  
+  .coming-soon-content h2 {
+    font-size: 1.6rem;
+  }
+  
+  .coming-soon-content p {
+    font-size: 0.95rem;
+  }
 }
