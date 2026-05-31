@@ -23,16 +23,23 @@ jobs:
         pip install -r DKG_ATM/requirements.txt
         
     - name: Run Tests
-      run: |
-        cd DKG_ATM
-        python manage.py test BankInterface
-
-    - name: Run Tests
+      working-directory: DKG_ATM
       env:
+        # REQUIRED: Set this in GitHub Repository Settings > Secrets
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        # Add other variables if needed:
-        # DEBUG: 'False'
-        # DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        
+        # REQUIRED: Environment variables expected by your settings.py
+        DEBUG: 'False'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
+        
+        # EMAIL SETTINGS: Using defaults or dummy values for testing
+        EMAIL_HOST: 'smtp.gmail.com'
+        EMAIL_PORT: '587'
+        EMAIL_USE_TLS: 'True'
+        EMAIL_HOST_USER: 'test@example.com'
+        EMAIL_HOST_PASSWORD: 'dummy-password'
+        DEFAULT_FROM_EMAIL: 'test@example.com'
       run: |
+        # Run tests for BankInterface specifically, then all tests
+        python manage.py test BankInterface
         python manage.py test
-
