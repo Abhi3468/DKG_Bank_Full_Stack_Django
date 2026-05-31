@@ -92,13 +92,16 @@ WSGI_APPLICATION = 'DKG_ATM.wsgi.application'
 # DATABASE_ROUTERS = ['DKG_ATM.routers.AppRouter']
 
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
+    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
+            conn_max_age=600,
+        ssl_require=False
+
 }
-if 'test' in sys.argv:
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-    }
+# if 'test' in sys.argv:
+#     DATABASES['default'] = {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': ':memory:',
+#     }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
