@@ -15,8 +15,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 import logging
 logger = logging.getLogger('bank_audit')
 
-from .models import Account, Transaction, Loan
-from .serializers import TransactionSerializer, LoanSerializer
+from BankInterface.models import Account, Transaction, Loan
+from BankInterface.serializers import TransactionSerializer, LoanSerializer
 
 class WithdrawalView(APIView):
     permission_classes = [AllowAny]

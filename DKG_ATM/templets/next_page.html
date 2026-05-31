@@ -6,13 +6,14 @@
     <meta name="description" content="DKG Bank - Secure online banking dashboard for account management and transactions.">
     <title>Dashboard | DKG Bank Portal</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'UserInterface/css/style.css' %}?v=6.0">
+    <link rel="stylesheet" href="{% static 'UserInterface/css/style.css' %}?v=7.0">
     <!-- BankInterface CSS has been consolidated -->
     <link rel="stylesheet" href="{% static 'BankInterface/css/dashboard.css' %}?v=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
+    {% csrf_token %}
     <header class="header">
         <a href="/" class="logo">DKG BANK</a>
         <div class="nav-links">
@@ -192,6 +193,6 @@
         </div>
     </div>
 
-    <script src="{% static 'BankInterface/js/dashboard.js' %}?v=4.0"></script>
+    <script src="{% static 'BankInterface/js/dashboard.js' %}?v=5.0"></script>
 </body>
 </html>

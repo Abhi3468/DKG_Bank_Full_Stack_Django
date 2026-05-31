@@ -37,7 +37,6 @@ services:
       SECRET_KEY: "django-insecure-docker-key-change-in-production"
       DATABASE_URL: "postgres://atm_user:atm_password@db:5432/atm_db"
       ALLOWED_HOSTS: "localhost,127.0.0.1,web,0.0.0.0"
-      EMAIL_HOST: "smtp-relay.brevo.com"
     depends_on:
       db:
         condition: service_healthy
