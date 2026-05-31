@@ -100,19 +100,15 @@ DATABASES = {
     )
 }
 
-<<<<<<< HEAD
+
 # This handles using in-memory SQLite during local/CI tests to keep things fast and prevent table locks
-=======
->>>>>>> 1e8c73a6751c5093e269bead5de042dba3c6dd61
+
 if "test" in sys.argv:
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": ":memory:",
     }
-<<<<<<< HEAD
 
-=======
->>>>>>> 1e8c73a6751c5093e269bead5de042dba3c6dd61
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
