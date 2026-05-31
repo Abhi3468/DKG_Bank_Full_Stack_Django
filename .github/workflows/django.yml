@@ -26,3 +26,13 @@ jobs:
       run: |
         cd DKG_ATM
         python manage.py test BankInterface
+
+    - name: Run Tests
+      env:
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        # Add other variables if needed:
+        # DEBUG: 'False'
+        # DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        python manage.py test
+
