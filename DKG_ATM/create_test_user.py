@@ -15,7 +15,15 @@ user, created = User.objects.get_or_create(username=username, defaults={'email':
 if created:
     user.set_password(password)
     user.save()
-    Account.objects.get_or_create(user=user, defaults={'card_number': "1111222233334444", 'card_pin': "1111", 'balance': 5000.00})
     print(f"Created user: {username}")
 else:
     print(f"User {username} already exists.")
+
+account, acc_created = Account.objects.get_or_create(
+    user=user, 
+    defaults={'card_number': "1111222233334444", 'card_pin': "1111", 'balance': 5000.00}
+)
+if acc_created:
+    print(f"Created ATM Account for user: {username}")
+else:
+    print(f"ATM Account for user: {username} already exists.")

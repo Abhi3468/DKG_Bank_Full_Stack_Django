@@ -51,19 +51,30 @@
         <div id="successModal"
             style="display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(10px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
             <div class="glass-panel"
-                style="padding: 2.5rem; max-width: 420px; width: 100%; text-align: center; border: 1px solid rgba(0, 242, 254, 0.2);">
+                style="padding: 2.5rem; max-width: 450px; width: 100%; text-align: center; border: 1px solid rgba(0, 242, 254, 0.2);">
                 <i class="bi bi-envelope-check-fill" style="font-size: 3.5rem; color: var(--accent-cyan); filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.4));"></i>
                 <h2 style="margin-top: 1.5rem; color: #fff;">Account Created!</h2>
-                <p style="margin: 1rem 0; color: var(--text-muted); line-height: 1.6;">
-                    Your account has been created successfully. <br>
-                    Your **Account Number**, **Customer ID**, **IFSC Code**, and **ATM Card details** have been emailed to your registered address.
-                </p>
                 
-                <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1.2rem; border-radius: 12px; margin: 1.5rem 0; text-align: left;">
-                    <p style="margin: 0; color: #fca5a5; font-size: 0.9rem; line-height: 1.5; font-weight: 500;">
+                <div id="emailStatusBadge" style="margin: 0.8rem 0; display: inline-block; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;"></div>
+
+                <p style="margin: 0.8rem 0; color: var(--text-muted); line-height: 1.5; font-size: 0.95rem;">
+                    Please write down your account and ATM card credentials immediately. You will need them to log in.
+                </p>
+
+                <!-- Credentials Display Box -->
+                <div style="background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); padding: 1.2rem; border-radius: 12px; margin: 1.2rem 0; text-align: left;">
+                    <h4 style="margin: 0 0 0.8rem 0; color: #fff; font-size: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 0.4rem; font-weight: 600;">Account & ATM Card details:</h4>
+                    <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; color: var(--text-light);"><strong>ATM Card Number:</strong> <span id="modalCardNumber" style="color: var(--accent-cyan); font-family: monospace; font-size: 1.05rem; font-weight: bold; letter-spacing: 1px;"></span></p>
+                    <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; color: var(--text-light);"><strong>ATM PIN:</strong> <span id="modalCardPin" style="color: var(--accent-cyan); font-family: monospace; font-size: 1.05rem; font-weight: bold; letter-spacing: 1px;"></span></p>
+                    <p style="margin: 0 0 0.4rem 0; font-size: 0.9rem; color: var(--text-light);"><strong>Account Number:</strong> <span id="modalAccountNumber" style="color: #fff; font-family: monospace; font-size: 0.95rem;"></span></p>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-light);"><strong>Customer ID:</strong> <span id="modalCustomerID" style="color: #fff; font-family: monospace; font-size: 0.95rem;"></span></p>
+                </div>
+                
+                <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1rem; border-radius: 12px; margin: 1.2rem 0; text-align: left;">
+                    <p style="margin: 0; color: #fca5a5; font-size: 0.85rem; line-height: 1.5; font-weight: 500;">
                         <i class="bi bi-exclamation-triangle-fill" style="color: #ef4444; margin-right: 6px;"></i>
                         <strong>SECURITY ALERT:</strong><br>
-                        Do not share your Card Number, PIN, or Password with anyone. DKG Bank will never ask for these details.
+                        Do not share your Card Number, PIN, or Password with anyone.
                     </p>
                 </div>
                 

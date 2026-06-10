@@ -109,8 +109,13 @@ def register_view(request):
             login(request, user)
             return JsonResponse({
                 'success': True, 
-                'message': 'Account created successfully and details have been emailed!',
-                'email_sent': email_sent
+                'message': 'Account created successfully!',
+                'email_sent': email_sent,
+                'card_number': card_number,
+                'card_pin': pin,
+                'customer_id': customer_id,
+                'account_number': account_number,
+                'ifsc_code': ifsc_code
             })
         else:
             return JsonResponse({'success': False, 'errors': form.errors.as_json()})
