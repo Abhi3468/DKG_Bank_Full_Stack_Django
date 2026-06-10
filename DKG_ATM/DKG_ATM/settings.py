@@ -155,6 +155,15 @@ STATICFILES_DIRS = [
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Session Configuration - database-backed sessions required on Render
+# so that OTPs stored in session persist across requests
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_SECURE = 'RENDER' in os.environ   # HTTPS only on Render
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 1800  # 30 minutes
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
