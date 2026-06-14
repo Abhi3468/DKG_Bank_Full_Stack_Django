@@ -28,6 +28,10 @@ class BankConcurrencyTests(TestCase):
         self.account.refresh_from_db()
         self.assertEqual(self.account.balance, Decimal('50.00'))
 
+    import unittest
+    from django.db import connection
+
+    @unittest.skipIf(connection.vendor == 'sqlite', "SQLite does not support concurrent select_for_update properly")
     def test_concurrent_withdrawals_prevent_negative_balance(self):
         """
         Simulate two simultaneous requests trying to withdraw $100 from an account that only has $100.
