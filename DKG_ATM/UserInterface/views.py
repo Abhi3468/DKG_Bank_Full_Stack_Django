@@ -253,3 +253,78 @@ def reset_password(request):
             return JsonResponse({'success': True, 'message': 'Password reset successful!'})
         return JsonResponse({'success': False, 'message': 'Session expired.'})
     return render(request, "reset_password.html")
+
+def db_health(request):
+    """
+    A diagnostic endpoint to check the database and environment configuration.
+    Visit /db-health/ on your Render site to see the status.
+    Only accessible in DEBUG mode OR with a secret key param for safety.
+    """
+    import os
+    from django.db import connection
+    from django.conf import settings
+    
+    # Basic security: only allow in DEBUG mode or if secret param matches
+    secret = request.GET.get('key', '')
+    allowed = settings.DEBUG or secret == os.environ.get('HEALTH_CHECK_KEY', '')
+    if not allowed:
+        return JsonResponse({'error': 'Not authorized. Set HEALTH_CHECK_KEY env var and pass ?key=... to access.'}, status=403)
+
+    result = {
+        'status': 'checking',
+        'database': {},
+        'environment': {},
+        'tables': [],
+        'errors': [],
+    }
+
+    # Check environment vars
+    result['environment'] = {
+        'DEBUG': str(settings.DEBUG),
+        'DATABASE_URL_SET': bool(os.environ.get('DATABASE_URL')),
+        'DATABASE_ENGINE': settings.DATABASES['default'].get('ENGINE', 'unknown'),
+        'DATABASE_HOST': settings.DATABASES['default'].get('HOST', 'N/A'),
+        'DATABASE_NAME': settings.DATABASES['default'].get('NAME', 'N/A'),
+        'EMAIL_HOST_USER_SET': bool(getattr(settings, 'EMAIL_HOST_USER', None)),
+        'EMAIL_HOST_PASSWORD_SET': bool(getattr(settings, 'EMAIL_HOST_PASSWORD', None)),
+    }
+
+    # Try DB connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        result['database']['connection'] = 'OK'
+        
+        # List all tables
+        try:
+            with connection.cursor() as cursor:
+                if 'sqlite' in settings.DATABASES['default'].get('ENGINE', ''):
+                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+                else:
+                    cursor.execute("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public' ORDER BY tablename;")
+                tables = [row[0] for row in cursor.fetchall()]
+                result['tables'] = tables
+
+            # Check critical tables
+            critical_tables = ['auth_user', 'BankInterface_account', 'django_session', 'django_migrations']
+            missing = [t for t in critical_tables if t not in tables]
+            result['database']['critical_tables_present'] = [t for t in critical_tables if t in tables]
+            result['database']['critical_tables_missing'] = missing
+            
+            if missing:
+                result['status'] = 'ERROR - missing tables (run migrations)'
+                result['errors'].append(f"Missing tables: {missing}. Run: python manage.py migrate")
+            else:
+                result['status'] = 'OK'
+        except Exception as te:
+            result['database']['tables_error'] = str(te)
+            result['status'] = 'partial'
+
+    except Exception as e:
+        result['database']['connection'] = 'FAILED'
+        result['database']['error'] = str(e)
+        result['status'] = 'ERROR - cannot connect to database'
+        result['errors'].append(str(e))
+
+    return JsonResponse(result, json_dumps_params={'indent': 2})
+

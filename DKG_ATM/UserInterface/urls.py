@@ -16,7 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from. import views
+from . import views
+from .views import db_health
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -28,5 +29,6 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password, name="forgot_password"),
     path('verify-otp/', views.verify_otp, name="verify_otp"),
     path('reset-password/', views.reset_password, name="reset_password"),
+    path('db-health/', db_health, name="db_health"),
 ]
 
