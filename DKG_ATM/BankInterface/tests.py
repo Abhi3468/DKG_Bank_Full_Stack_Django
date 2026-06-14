@@ -22,7 +22,7 @@ class BankConcurrencyTests(TestCase):
         response = self.client.post(reverse('BankInterface:withdraw'), json.dumps({
             'card_number': '1234567890123456',
             'amount': 50.00
-        }), content_type='application/json')
+        }), content_type='application/json', secure=True)
         
         self.assertEqual(response.status_code, 200)
         self.account.refresh_from_db()
@@ -40,7 +40,7 @@ class BankConcurrencyTests(TestCase):
             return client.post(reverse('BankInterface:withdraw'), json.dumps({
                 'card_number': '1234567890123456',
                 'amount': 100.00
-            }), content_type='application/json')
+            }), content_type='application/json', secure=True)
 
         # Using Python threading to simulate concurrent API requests
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
