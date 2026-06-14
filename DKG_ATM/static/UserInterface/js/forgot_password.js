@@ -22,7 +22,13 @@ document.addEventListener('DOMContentLoaded', function () {
             body: 'email=' + encodeURIComponent(email)
         })
         .then(function (res) {
-            if (!res.ok) throw new Error('Server error: ' + res.status);
+            if (!res.ok) {
+                return res.json().then(errData => {
+                    throw new Error(errData.message || 'Server error: ' + res.status);
+                }).catch(e => {
+                    throw new Error(e.message || 'Server error: ' + res.status);
+                });
+            }
             return res.json();
         })
         .then(function (data) {
@@ -34,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(function (error) {
-            err.textContent = 'Network error. Please try again.';
+            err.textContent = error.message || 'Network error. Please try again.';
             err.style.display = 'block';
             console.error('Forgot password error:', error);
         })
