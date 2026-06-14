@@ -204,8 +204,11 @@ def next_page(request):
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email')
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return JsonResponse({'success': False, 'message': 'No account found with this email.'})
+            
         try:
-            user = User.objects.get(email=email)
             otp = ''.join(random.choices(string.digits, k=6))
             request.session['reset_otp'] = otp
             request.session['reset_user_id'] = user.id
@@ -224,12 +227,9 @@ def forgot_password(request):
                 )
                 print(f"\n[BANK SECURITY] Password reset OTP sent via email to {user.email}: {otp}\n", flush=True)
                 return JsonResponse({'success': True, 'message': 'OTP sent to your email.'})
-            except Exception as mail_err:
-                print(f"Mail Error: {mail_err}")
-                return JsonResponse({'success': False, 'message': 'Failed to send email. Please check SMTP settings.'}, status=500)
-                
-        except User.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'No account found with this email.'})
+        except Exception as mail_err:
+            print(f"Mail Error: {mail_err}")
+            return JsonResponse({'success': False, 'message': 'Failed to send email. Please check SMTP settings.'}, status=500)
     return render(request, "forgot_password.html")
 
 def verify_otp(request):
