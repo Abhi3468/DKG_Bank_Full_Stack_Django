@@ -23,10 +23,13 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(function (res) {
             if (!res.ok) {
-                return res.json().then(errData => {
-                    throw new Error(errData.message || 'Server error: ' + res.status);
-                }).catch(e => {
-                    throw new Error(e.message || 'Server error: ' + res.status);
+                return res.text().then(text => {
+                    try {
+                        const errData = JSON.parse(text);
+                        throw new Error(errData.message || 'Server error: ' + res.status);
+                    } catch (e) {
+                        throw new Error('Server error: ' + res.status + ' (' + res.statusText + ')');
+                    }
                 });
             }
             return res.json();
