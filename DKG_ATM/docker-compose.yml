@@ -1,3 +1,4 @@
+# DKG_ATM/docker-compose.yml
 version: '3.8'
 
 services:
@@ -19,17 +20,16 @@ services:
       retries: 5
     networks:
       - atm_network
+    restart: unless-stopped
 
   web:
     build: .
     container_name: atm_web
+    # REMOVED: migrate from command (run separately via `docker compose run web migrate`)
     command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
+      sh -c "python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8000 DKG_ATM.wsgi:application"
-    volumes:
-      - .:/app
-      - static_volume:/app/staticfiles
+    # REMOVED: volumes: - .:/app (breaks production - use for dev only)
     ports:
       - "8000:8000"
     environment:
@@ -37,6 +37,8 @@ services:
       SECRET_KEY: "django-insecure-docker-key-change-in-production"
       DATABASE_URL: "postgres://atm_user:atm_password@db:5432/atm_db"
       ALLOWED_HOSTS: "localhost,127.0.0.1,web,0.0.0.0"
+      # ADD: Render-specific env vars for local testing
+      RENDER_EXTERNAL_HOSTNAME: "localhost"
     depends_on:
       db:
         condition: service_healthy
@@ -65,4 +67,3 @@ volumes:
 networks:
   atm_network:
     driver: bridge
-

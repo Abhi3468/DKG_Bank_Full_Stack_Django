@@ -1,36 +1,27 @@
-asgiref==3.8.1
-distlib==0.3.8
-Django==5.0.6
-filelock==3.14.0
-# numpy==1.26.4
-# pillow==10.3.0
-platformdirs==4.2.1
-pytz==2024.1
-sqlparse==0.5.0
-tzdata==2024.1
-virtualenv==20.26.1
-psycopg2-binary==2.9.9
-djangorestframework==3.15.1
-djangorestframework-simplejwt==5.3.1
-whitenoise==6.7.0
+# ================================
+# DKG_ATM - PRODUCTION REQUIREMENTS
+# ================================
 
-reportlab==4.1.0
-django-environ==0.11.2
-gunicorn==22.0.0
-dj-database-url==2.1.0
-
-# Core
+# --- Core Framework ---
 Django>=4.2,<5.0
+
+# --- Database & Deployment ---
 dj-database-url>=2.1.0
 psycopg2-binary>=2.9.0
 gunicorn>=21.0.0
 whitenoise>=6.5.0
 
-# If using DRF (serializers.py exists)
+# --- API & Auth ---
 djangorestframework>=3.14.0
-
-# If using CORS (frontend on different domain)
+djangorestframework-simplejwt>=5.3.0
 django-cors-headers>=4.0.0
 
-# Environment management
+# --- Utilities ---
 python-dotenv>=1.0.0
+django-environ>=0.11.0
+
+# --- PDF Generation ---
+reportlab>=4.1.0
+
+# --- Timezone Support ---
+tzdata>=2024.1
