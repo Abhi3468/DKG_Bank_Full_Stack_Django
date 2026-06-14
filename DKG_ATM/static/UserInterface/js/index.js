@@ -84,7 +84,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({ username: username })
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => {
+                            let errorMsg = '';
+                            try {
+                                const errData = JSON.parse(text);
+                                errorMsg = errData.message;
+                            } catch (e) {
+                                if (text.includes("OperationalError") || text.includes("no such table")) {
+                                    errorMsg = "Database Error: Database tables have not been created. Please run migrations.";
+                                } else if (text.includes("SMTP") || text.includes("smtplib")) {
+                                    errorMsg = "Mail Error: Failed to send OTP. Please check server SMTP credentials.";
+                                } else {
+                                    errorMsg = 'Server error: ' + res.status + (res.statusText ? ' (' + res.statusText + ')' : '');
+                                }
+                            }
+                            throw new Error(errorMsg || 'Failed to send OTP. Server error ' + res.status);
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         successDiv.textContent = data.message;
@@ -110,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(err => {
-                    errorDiv.textContent = "An error occurred while sending OTP.";
+                    errorDiv.textContent = err.message || "An error occurred while sending OTP.";
                     errorDiv.style.display = 'block';
                     this.disabled = false;
                     this.textContent = "Send OTP";
@@ -148,7 +168,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(payload)
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => {
+                            let errorMsg = '';
+                            try {
+                                const errData = JSON.parse(text);
+                                errorMsg = errData.message;
+                            } catch (e) {
+                                if (text.includes("OperationalError") || text.includes("no such table")) {
+                                    errorMsg = "Database Error: Database tables have not been created. Please run migrations.";
+                                } else {
+                                    errorMsg = 'Server error: ' + res.status + (res.statusText ? ' (' + res.statusText + ')' : '');
+                                }
+                            }
+                            throw new Error(errorMsg || 'Login failed. Server error ' + res.status);
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         window.location.href = '/next_page/';
@@ -158,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(err => {
-                    errorDiv.textContent = "An error occurred during login.";
+                    errorDiv.textContent = err.message || "An error occurred during login.";
                     errorDiv.style.display = 'block';
                     console.error(err);
                 });

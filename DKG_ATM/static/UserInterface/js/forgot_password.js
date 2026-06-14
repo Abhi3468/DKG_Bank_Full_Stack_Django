@@ -24,12 +24,20 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (res) {
             if (!res.ok) {
                 return res.text().then(text => {
+                    let errorMsg = '';
                     try {
                         const errData = JSON.parse(text);
-                        throw new Error(errData.message || 'Server error: ' + res.status);
+                        errorMsg = errData.message;
                     } catch (e) {
-                        throw new Error('Server error: ' + res.status + ' (' + res.statusText + ')');
+                        if (text.includes("OperationalError") || text.includes("no such table")) {
+                            errorMsg = "Database Error: It looks like the database tables have not been created or migrated.";
+                        } else if (text.includes("SMTP") || text.includes("smtplib")) {
+                            errorMsg = "Mail Error: Failed to send OTP. Please check server SMTP credentials.";
+                        } else {
+                            errorMsg = 'Server error: ' + res.status + (res.statusText ? ' (' + res.statusText + ')' : '');
+                        }
                     }
+                    throw new Error(errorMsg || 'Server error: ' + res.status);
                 });
             }
             return res.json();

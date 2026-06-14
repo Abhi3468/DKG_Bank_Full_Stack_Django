@@ -30,7 +30,22 @@ document.addEventListener('DOMContentLoaded', function () {
             body: 'password=' + encodeURIComponent(password)
         })
         .then(function (res) {
-            if (!res.ok) throw new Error('Server error: ' + res.status);
+            if (!res.ok) {
+                return res.text().then(text => {
+                    let errorMsg = '';
+                    try {
+                        const errData = JSON.parse(text);
+                        errorMsg = errData.message;
+                    } catch (e) {
+                        if (text.includes("OperationalError") || text.includes("no such table")) {
+                            errorMsg = "Database Error: Database tables have not been created. Please run migrations.";
+                        } else {
+                            errorMsg = 'Server error: ' + res.status + (res.statusText ? ' (' + res.statusText + ')' : '');
+                        }
+                    }
+                    throw new Error(errorMsg || 'Server error: ' + res.status);
+                });
+            }
             return res.json();
         })
         .then(function (data) {
@@ -47,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(function (error) {
-            err.textContent = 'Network error. Please try again.';
+            err.textContent = error.message || 'Network error. Please try again.';
             err.style.display = 'block';
             console.error('Reset password error:', error);
         })

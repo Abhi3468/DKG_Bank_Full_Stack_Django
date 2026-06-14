@@ -48,5 +48,4 @@ jobs:
           DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
         run: |
           python manage.py migrate
-          python manage.py test BankInterface
-          python manage.py test
+          python manage.py test BankInterface UserInterface

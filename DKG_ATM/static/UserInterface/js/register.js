@@ -24,7 +24,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: "POST",
                 body: formData
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => {
+                            let errorMsg = '';
+                            try {
+                                const errData = JSON.parse(text);
+                                errorMsg = errData.errors || errData.message;
+                            } catch (e) {
+                                if (text.includes("OperationalError") || text.includes("no such table")) {
+                                    errorMsg = "Database Error: Database tables have not been created. Please run migrations.";
+                                } else if (text.includes("SMTP") || text.includes("smtplib")) {
+                                    errorMsg = "Mail Error: Failed to send account details. Please check SMTP configuration.";
+                                } else {
+                                    errorMsg = 'Server error: ' + res.status + (res.statusText ? ' (' + res.statusText + ')' : '');
+                                }
+                            }
+                            throw new Error(errorMsg || 'Registration failed. Server error ' + res.status);
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         // Populate credentials in success modal
@@ -67,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(err => {
                     console.error('Registration error:', err);
-                    errorDiv.textContent = 'Something went wrong. Please try again.';
+                    errorDiv.textContent = err.message || 'Something went wrong. Please try again.';
                     errorDiv.style.display = 'block';
                 })
                 .finally(() => {
