@@ -217,16 +217,15 @@ def forgot_password(request):
             subject = 'DKG Bank - Password Reset OTP'
             message = f'Hello {user.username},\n\nYour One-Time Password (OTP) for resetting your password is: {otp}\n\nThis OTP is valid for a short time. Do not share this with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\nThank you,\nDKG Bank Security'
             
-            try:
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
-                print(f"\n[BANK SECURITY] Password reset OTP sent via email to {user.email}: {otp}\n", flush=True)
-                return JsonResponse({'success': True, 'message': 'OTP sent to your email.'})
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            print(f"\n[BANK SECURITY] Password reset OTP sent via email to {user.email}: {otp}\n", flush=True)
+            return JsonResponse({'success': True, 'message': 'OTP sent to your email.'})
         except Exception as mail_err:
             print(f"Mail Error: {mail_err}")
             return JsonResponse({'success': False, 'message': 'Failed to send email. Please check SMTP settings.'}, status=500)
