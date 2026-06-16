@@ -275,6 +275,9 @@ def forgot_password(request):
             except Exception as mail_err:
                 print(f"Mail Error: {mail_err}")
                 return JsonResponse({'success': False, 'message': 'Failed to send email. Please check SMTP settings.'}, status=500)
+        except Exception as e:
+            print(f"Error in forgot password request: {e}")
+            return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
     return render(request, "forgot_password.html")
 
 def verify_otp(request):
