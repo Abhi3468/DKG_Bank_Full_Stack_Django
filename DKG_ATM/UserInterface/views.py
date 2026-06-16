@@ -44,14 +44,62 @@ def generate_pin():
     return ''.join(random.choices(string.digits, k=4))
 
 import threading
+import urllib.request
+import urllib.error
+import json
+import os
+
+def send_mail_via_brevo(subject, message, from_email, recipient_list, api_key):
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json",
+    }
+    
+    to_list = [{"email": email} for email in recipient_list]
+    
+    payload = {
+        "sender": {"name": "DKG Bank", "email": from_email},
+        "to": to_list,
+        "subject": subject,
+        "textContent": message,
+    }
+    
+    req = urllib.request.Request(
+        url, 
+        data=json.dumps(payload).encode('utf-8'), 
+        headers=headers, 
+        method='POST'
+    )
+    
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_body = response.read().decode('utf-8')
+            print(f"[BREVO SUCCESS] Email sent: {res_body}", flush=True)
+            return True
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode('utf-8')
+        print(f"[BREVO HTTP ERROR] {e.code} {e.reason}: {err_body}", flush=True)
+        raise Exception(f"Brevo API error: {e.code} - {err_body}")
+    except Exception as e:
+        print(f"[BREVO ERROR] {e}", flush=True)
+        raise e
 
 def send_mail_async(subject, message, from_email, recipient_list, fail_silently=False):
     def _send():
-        try:
-            send_mail(subject, message, from_email, recipient_list, fail_silently=fail_silently)
-            print(f"\n[EMAIL SUCCESS] Sent email to {recipient_list}\n", flush=True)
-        except Exception as e:
-            print(f"\n[EMAIL ERROR] Failed to send email to {recipient_list}: {e}\n", flush=True)
+        api_key = os.environ.get("BREVO_API_KEY")
+        if api_key:
+            try:
+                send_mail_via_brevo(subject, message, from_email, recipient_list, api_key)
+            except Exception as e:
+                print(f"\n[EMAIL ERROR] Failed to send email via Brevo: {e}\n", flush=True)
+        else:
+            try:
+                send_mail(subject, message, from_email, recipient_list, fail_silently=fail_silently)
+                print(f"\n[EMAIL SUCCESS] Sent email to {recipient_list}\n", flush=True)
+            except Exception as e:
+                print(f"\n[EMAIL ERROR] Failed to send email to {recipient_list}: {e}\n", flush=True)
 
     thread = threading.Thread(target=_send)
     thread.daemon = True
@@ -384,25 +432,42 @@ def test_email(request):
             'error': 'Please provide a recipient email address using ?to=email@example.com'
         }, status=400)
     
+    api_key = os.environ.get("BREVO_API_KEY")
     result = {
         'recipient': to_email,
-        'smtp_user': settings.EMAIL_HOST_USER,
-        'smtp_host': settings.EMAIL_HOST,
-        'smtp_port': settings.EMAIL_PORT,
-        'use_tls': settings.EMAIL_USE_TLS,
+        'brevo_api_key_configured': bool(api_key),
         'from_email': settings.DEFAULT_FROM_EMAIL,
     }
     
+    if not api_key:
+        result.update({
+            'smtp_user': settings.EMAIL_HOST_USER,
+            'smtp_host': settings.EMAIL_HOST,
+            'smtp_port': settings.EMAIL_PORT,
+            'use_tls': settings.EMAIL_USE_TLS,
+        })
+    
     try:
-        send_mail(
-            'DKG ATM - Diagnostics Test Email',
-            'This is a diagnostic test email to verify SMTP configuration on Render.',
-            settings.DEFAULT_FROM_EMAIL,
-            [to_email],
-            fail_silently=False,
-        )
-        result['status'] = 'SUCCESS'
-        result['message'] = 'Test email sent successfully! Please check your inbox.'
+        if api_key:
+            send_mail_via_brevo(
+                'DKG ATM - Diagnostics Test Email (Brevo)',
+                'This is a diagnostic test email verifying your Brevo API key configuration on Render.',
+                settings.DEFAULT_FROM_EMAIL,
+                [to_email],
+                api_key
+            )
+            result['status'] = 'SUCCESS'
+            result['message'] = 'Test email sent successfully via Brevo HTTP API! Please check your inbox.'
+        else:
+            send_mail(
+                'DKG ATM - Diagnostics Test Email (SMTP)',
+                'This is a diagnostic test email to verify SMTP configuration.',
+                settings.DEFAULT_FROM_EMAIL,
+                [to_email],
+                fail_silently=False,
+            )
+            result['status'] = 'SUCCESS'
+            result['message'] = 'Test email sent successfully via SMTP! Please check your inbox.'
     except Exception as e:
         import traceback
         result['status'] = 'FAILED'
