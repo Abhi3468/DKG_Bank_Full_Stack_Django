@@ -25,6 +25,16 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 IS_RENDER = 'RENDER' in os.environ or RENDER_EXTERNAL_HOSTNAME is not None
 
+# Force IPv4 getaddrinfo on Render to avoid IPv6 "Network is unreachable" errors
+if IS_RENDER:
+    import socket
+    orig_getaddrinfo = socket.getaddrinfo
+    def custom_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        if family == 0 or family == socket.AF_UNSPEC:
+            family = socket.AF_INET
+        return orig_getaddrinfo(host, port, family, type, proto, flags)
+    socket.getaddrinfo = custom_getaddrinfo
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
