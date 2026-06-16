@@ -372,3 +372,42 @@ def db_health(request):
 
     return JsonResponse(result, json_dumps_params={'indent': 2})
 
+
+def test_email(request):
+    """
+    A diagnostic page to test email sending.
+    Usage: /test-email/?to=abhishekr0313@gmail.com
+    """
+    to_email = request.GET.get('to')
+    if not to_email:
+        return JsonResponse({
+            'error': 'Please provide a recipient email address using ?to=email@example.com'
+        }, status=400)
+    
+    result = {
+        'recipient': to_email,
+        'smtp_user': settings.EMAIL_HOST_USER,
+        'smtp_host': settings.EMAIL_HOST,
+        'smtp_port': settings.EMAIL_PORT,
+        'use_tls': settings.EMAIL_USE_TLS,
+        'from_email': settings.DEFAULT_FROM_EMAIL,
+    }
+    
+    try:
+        send_mail(
+            'DKG ATM - Diagnostics Test Email',
+            'This is a diagnostic test email to verify SMTP configuration on Render.',
+            settings.DEFAULT_FROM_EMAIL,
+            [to_email],
+            fail_silently=False,
+        )
+        result['status'] = 'SUCCESS'
+        result['message'] = 'Test email sent successfully! Please check your inbox.'
+    except Exception as e:
+        import traceback
+        result['status'] = 'FAILED'
+        result['error'] = str(e)
+        result['traceback'] = traceback.format_exc()
+        
+    return JsonResponse(result, json_dumps_params={'indent': 2})
+

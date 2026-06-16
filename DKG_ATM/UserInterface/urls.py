@@ -30,5 +30,6 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name="verify_otp"),
     path('reset-password/', views.reset_password, name="reset_password"),
     path('db-health/', db_health, name="db_health"),
+    path('test-email/', views.test_email, name="test_email"),
 ]
 
