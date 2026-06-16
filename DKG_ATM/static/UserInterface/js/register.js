@@ -30,14 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             let errorMsg = '';
                             try {
                                 const errData = JSON.parse(text);
-                                errorMsg = errData.errors || errData.message;
+                                // Server now returns {success: false, message: '...'} on errors
+                                errorMsg = errData.message || errData.errors || '';
                             } catch (e) {
-                                if (text.includes("OperationalError") || text.includes("no such table")) {
-                                    errorMsg = "Database Error: Database tables have not been created. Please run migrations.";
+                                if (text.includes("OperationalError") || text.includes("no such table") || text.includes("relation") || text.includes("does not exist")) {
+                                    errorMsg = "Database Error: Database tables have not been created. Please run migrations on the server.";
                                 } else if (text.includes("SMTP") || text.includes("smtplib")) {
                                     errorMsg = "Mail Error: Failed to send account details. Please check SMTP configuration.";
                                 } else {
-                                    errorMsg = 'Server error: ' + res.status + (res.statusText ? ' (' + res.statusText + ')' : '');
+                                    errorMsg = 'Server error: ' + res.status;
                                 }
                             }
                             throw new Error(errorMsg || 'Registration failed. Server error ' + res.status);

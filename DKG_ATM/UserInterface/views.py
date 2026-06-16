@@ -51,20 +51,46 @@ def register_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = User.objects.create_user(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password']
-            )
+            user = None
+            try:
+                user = User.objects.create_user(
+                    username=form.cleaned_data['username'],
+                    email=form.cleaned_data['email'],
+                    password=form.cleaned_data['password']
+                )
+            except Exception as e:
+                import traceback
+                print(f"[REGISTER ERROR] Failed to create user: {e}", flush=True)
+                traceback.print_exc()
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Failed to create user account: {str(e)}'
+                }, status=500)
+
             # Create associated account
-            card_number = generate_card_number()
-            pin = generate_pin()
-            account = Account.objects.create(
-                user=user,
-                card_number=card_number,
-                card_pin=pin,
-                balance=1000.00
-            )
+            try:
+                card_number = generate_card_number()
+                pin = generate_pin()
+                account = Account.objects.create(
+                    user=user,
+                    card_number=card_number,
+                    card_pin=pin,
+                    balance=1000.00
+                )
+            except Exception as e:
+                import traceback
+                print(f"[REGISTER ERROR] Failed to create bank account: {e}", flush=True)
+                traceback.print_exc()
+                # Clean up the user since account creation failed
+                if user:
+                    try:
+                        user.delete()
+                    except Exception:
+                        pass
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Failed to create bank account: {str(e)}'
+                }, status=500)
             
             # Fetch generated details
             customer_name = user.username
@@ -91,7 +117,7 @@ def register_view(request):
                 f"DKG Bank Team"
             )
             
-            # Send Email
+            # Send Email (non-blocking — registration succeeds even if email fails)
             email_sent = False
             try:
                 send_mail(
@@ -104,9 +130,13 @@ def register_view(request):
                 email_sent = True
                 print(f"\n[BANK SECURITY] Registration details sent via email to {user.email}\n", flush=True)
             except Exception as mail_err:
-                print(f"Mail Error during registration: {mail_err}")
+                print(f"[REGISTER WARNING] Mail Error during registration: {mail_err}", flush=True)
             
-            login(request, user)
+            try:
+                login(request, user)
+            except Exception as login_err:
+                print(f"[REGISTER WARNING] Auto-login failed: {login_err}", flush=True)
+
             return JsonResponse({
                 'success': True, 
                 'message': 'Account created successfully!',
@@ -118,7 +148,7 @@ def register_view(request):
                 'ifsc_code': ifsc_code
             })
         else:
-            return JsonResponse({'success': False, 'errors': form.errors.as_json()})
+            return JsonResponse({'success': False, 'errors': form.errors.as_json()}, status=400)
     return render(request, "register.html")
 
 def login_view(request):
