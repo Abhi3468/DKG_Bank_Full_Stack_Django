@@ -48,12 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     if (data.success) {
-                        // Populate credentials in success modal
-                        document.getElementById('modalCardNumber').textContent = data.card_number;
-                        document.getElementById('modalCardPin').textContent = data.card_pin;
-                        document.getElementById('modalAccountNumber').textContent = data.account_number;
-                        document.getElementById('modalCustomerID').textContent = data.customer_id;
-
                         const badge = document.getElementById('emailStatusBadge');
                         if (data.email_sent) {
                             badge.textContent = 'Email Sent Successfully';
@@ -61,10 +55,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             badge.style.color = '#34d399';
                             badge.style.border = '1px solid rgba(16, 185, 129, 0.4)';
                         } else {
-                            badge.textContent = 'Email Offline - Write Details Down';
-                            badge.style.background = 'rgba(245, 158, 11, 0.15)';
-                            badge.style.color = '#fbbf24';
-                            badge.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+                            badge.textContent = 'Email Offline - Please Contact Support';
+                            badge.style.background = 'rgba(239, 68, 68, 0.15)';
+                            badge.style.color = '#f87171';
+                            badge.style.border = '1px solid rgba(239, 68, 68, 0.4)';
                         }
 
                         document.getElementById('successModal').style.display = 'flex';
