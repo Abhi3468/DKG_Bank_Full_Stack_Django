@@ -86,24 +86,24 @@ def send_mail_via_brevo(subject, message, from_email, recipient_list, api_key):
         print(f"[BREVO ERROR] {e}", flush=True)
         raise e
 
-def send_mail_async(subject, message, from_email, recipient_list, fail_silently=False):
-    def _send():
-        api_key = os.environ.get("BREVO_API_KEY")
-        if api_key:
-            try:
-                send_mail_via_brevo(subject, message, from_email, recipient_list, api_key)
-            except Exception as e:
-                print(f"\n[EMAIL ERROR] Failed to send email via Brevo: {e}\n", flush=True)
-        else:
-            try:
-                send_mail(subject, message, from_email, recipient_list, fail_silently=fail_silently)
-                print(f"\n[EMAIL SUCCESS] Sent email to {recipient_list}\n", flush=True)
-            except Exception as e:
-                print(f"\n[EMAIL ERROR] Failed to send email to {recipient_list}: {e}\n", flush=True)
-
-    thread = threading.Thread(target=_send)
-    thread.daemon = True
-    thread.start()
+def send_email_now(subject, message, from_email, recipient_list, fail_silently=False):
+    """Send email synchronously. Uses Brevo HTTP API if configured, otherwise falls back to SMTP."""
+    api_key = os.environ.get("BREVO_API_KEY")
+    if api_key:
+        try:
+            send_mail_via_brevo(subject, message, from_email, recipient_list, api_key)
+            return True
+        except Exception as e:
+            print(f"\n[EMAIL ERROR] Failed to send email via Brevo: {e}\n", flush=True)
+            return False
+    else:
+        try:
+            send_mail(subject, message, from_email, recipient_list, fail_silently=fail_silently)
+            print(f"\n[EMAIL SUCCESS] Sent email to {recipient_list}\n", flush=True)
+            return True
+        except Exception as e:
+            print(f"\n[EMAIL ERROR] Failed to send email to {recipient_list}: {e}\n", flush=True)
+            return False
 
 def index(request):
     if request.user.is_authenticated:
@@ -180,20 +180,17 @@ def register_view(request):
                 f"DKG Bank Team"
             )
             
-            # Send Email (non-blocking — registration succeeds even if email fails)
-            email_sent = True
-            try:
-                send_mail_async(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
-                print(f"\n[BANK SECURITY] Registration details queued via email to {user.email}\n", flush=True)
-            except Exception as mail_err:
-                email_sent = False
-                print(f"[REGISTER WARNING] Mail enqueue failed: {mail_err}", flush=True)
+            # Send Email synchronously (Brevo HTTP API is fast, no timeout risk)
+            email_sent = send_email_now(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            )
+            if email_sent:
+                print(f"\n[BANK SECURITY] Registration details sent via email to {user.email}\n", flush=True)
+            else:
+                print(f"[REGISTER WARNING] Failed to send registration email to {user.email}", flush=True)
             
             try:
                 login(request, user)
@@ -263,19 +260,18 @@ def send_login_otp(request):
             subject = 'DKG Bank - Your Login OTP'
             message = f'Hello {username},\n\nYour One-Time Password (OTP) for login is: {otp}\n\nThis OTP is valid for a short time. Do not share this with anyone.\n\nThank you,\nDKG Bank Security'
             
-            try:
-                send_mail_async(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user_obj.email],
-                    fail_silently=False,
-                )
-                print(f"\n[BANK SECURITY] Login OTP queued via email to {user_obj.email}: {otp}\n", flush=True)
+            otp_sent = send_email_now(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user_obj.email],
+            )
+            if otp_sent:
+                print(f"\n[BANK SECURITY] Login OTP sent via email to {user_obj.email}: {otp}\n", flush=True)
                 return JsonResponse({'success': True, 'message': 'OTP sent to your registered email successfully!'}, status=200)
-            except Exception as mail_err:
-                print(f"Mail Error: {mail_err}")
-                return JsonResponse({'success': False, 'message': 'Failed to send email. Please check SMTP settings.'}, status=500)
+            else:
+                print(f"[EMAIL ERROR] Login OTP email failed for {user_obj.email}", flush=True)
+                return JsonResponse({'success': False, 'message': 'Failed to send OTP email. Please try again.'}, status=500)
                 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
@@ -305,19 +301,18 @@ def forgot_password(request):
             subject = 'DKG Bank - Password Reset OTP'
             message = f'Hello {user.username},\n\nYour One-Time Password (OTP) for resetting your password is: {otp}\n\nThis OTP is valid for a short time. Do not share this with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\nThank you,\nDKG Bank Security'
             
-            try:
-                send_mail_async(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
-                print(f"\n[BANK SECURITY] Password reset OTP queued via email to {user.email}: {otp}\n", flush=True)
+            otp_sent = send_email_now(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            )
+            if otp_sent:
+                print(f"\n[BANK SECURITY] Password reset OTP sent via email to {user.email}: {otp}\n", flush=True)
                 return JsonResponse({'success': True, 'message': 'OTP sent to your email.'})
-            except Exception as mail_err:
-                print(f"Mail Error: {mail_err}")
-                return JsonResponse({'success': False, 'message': 'Failed to send email. Please check SMTP settings.'}, status=500)
+            else:
+                print(f"[EMAIL ERROR] Password reset OTP email failed for {user.email}", flush=True)
+                return JsonResponse({'success': False, 'message': 'Failed to send OTP email. Please try again.'}, status=500)
         except Exception as e:
             print(f"Error in forgot password request: {e}")
             return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
